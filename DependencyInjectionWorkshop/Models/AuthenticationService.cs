@@ -43,8 +43,16 @@ namespace DependencyInjectionWorkshop.Models
             if (response.IsSuccessStatusCode) { }
             else throw new Exception($"web api error, accountId:{otp}");
 
+            // compare hashed password and otp
             var currentOtp = response.Content.ReadAsAsync<string>().Result;
-
+            if (passwordFromDb == hashedPassword && otp == currentOtp)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
