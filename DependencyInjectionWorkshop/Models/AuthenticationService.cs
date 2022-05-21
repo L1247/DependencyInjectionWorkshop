@@ -31,9 +31,7 @@ namespace DependencyInjectionWorkshop.Models
         /// <returns>IsValid</returns>
         public bool Verify(string accountId , string inputPassword , string inputOtp)
         {
-            var httpClient = new HttpClient() { BaseAddress = new Uri("http://joey.com/") };
-
-            var isAccountLocked = failedCounterProxy.IsAccountLocked(accountId , httpClient);
+            var isAccountLocked = failedCounterProxy.IsAccountLocked(accountId);
             if (isAccountLocked)
             {
                 throw new FailedTooManyTimesException() { AccountId = accountId };
@@ -41,17 +39,17 @@ namespace DependencyInjectionWorkshop.Models
 
             var passwordFromDb = profileDao.GetPasswordFromDb(accountId);
             var hashedPassword = sha256Adapter.GetHashedPassword(inputPassword);
-            var currentOtp     = otpProxy.GetCurrentOtp(inputOtp , httpClient);
+            var currentOtp     = otpProxy.GetCurrentOtp(inputOtp , new HttpClient() { BaseAddress = new Uri("http://joey.com/") });
             if (passwordFromDb == hashedPassword && inputOtp == currentOtp)
             {
-                failedCounterProxy.ResetFailCount(accountId , httpClient);
+                failedCounterProxy.ResetFailCount(accountId , new HttpClient() { BaseAddress = new Uri("http://joey.com/") });
                 return true;
             }
             else
             {
                 // 驗證失敗，累計失敗次數
-                failedCounterProxy.AddFailCount(accountId , httpClient);
-                var failedCount = failedCounterProxy.GetFailedCount(accountId , httpClient);
+                failedCounterProxy.AddFailCount(accountId , new HttpClient() { BaseAddress = new Uri("http://joey.com/") });
+                var failedCount = failedCounterProxy.GetFailedCount(accountId , new HttpClient() { BaseAddress = new Uri("http://joey.com/") });
                 nLogAdapter.LogInfo($"accountId:{accountId} failed times:{failedCount}");
                 slackAdapter.NotifyUser(accountId);
                 return false;
