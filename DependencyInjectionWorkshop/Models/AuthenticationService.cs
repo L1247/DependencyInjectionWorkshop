@@ -40,19 +40,19 @@ namespace DependencyInjectionWorkshop.Models
             var hashedPassword = hash.ToString();
 
             var httpClient = new HttpClient() { BaseAddress = new Uri("http://joey.com/") };
-            var response   = httpClient.PostAsJsonAsync("api/otps" , inputOtp).Result;
+            var response   = httpClient.PostAsJsonAsync("api/otps" , inputOtp).GetAwaiter().GetResult();
             if (response.IsSuccessStatusCode) { }
             else throw new Exception($"web api error, accountId:{inputOtp}");
 
             // compare hashed password and otp
-            var currentOtp = response.Content.ReadAsAsync<string>().Result;
+            var currentOtp = response.Content.ReadAsAsync<string>().GetAwaiter().GetResult();
             if (passwordFromDb == hashedPassword && inputOtp == currentOtp)
             {
                 return true;
             }
             else
             {
-                string message     = $"account:{accountId} try to login fail";
+                string message     = $"account:{accountId} try to login failed";
                 var    slackClient = new SlackClient("my api token");
                 slackClient.PostMessage(response1 => { } , "my channel" , message , "my bot name");
                 return false;
