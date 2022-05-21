@@ -21,10 +21,10 @@ namespace DependencyInjectionWorkshop.Models
         public bool Verify(string accountId , string inputPassword , string inputOtp)
         {
             var httpClient       = new HttpClient() { BaseAddress = new Uri("http://joey.com/") };
-            var isLockedResponse = httpClient.PostAsJsonAsync("api/failedCounter/IsLocked" , accountId).Result;
+            var isLockedResponse = httpClient.PostAsJsonAsync("api/failedCounter/IsLocked" , accountId).GetAwaiter().GetResult();
 
             isLockedResponse.EnsureSuccessStatusCode();
-            if (isLockedResponse.Content.ReadAsAsync<bool>().Result)
+            if (isLockedResponse.Content.ReadAsAsync<bool>().GetAwaiter().GetResult())
             {
                 throw new FailedTooManyTimesException() { AccountId = accountId };
             }
@@ -65,8 +65,16 @@ namespace DependencyInjectionWorkshop.Models
             {
                 // 驗證失敗，累計失敗次數
                 var addFailedCountResponse = httpClient.PostAsJsonAsync("api/failedCounter/Add" , accountId).Result;
-
                 addFailedCountResponse.EnsureSuccessStatusCode();
+
+                var failedCountResponse =
+                    httpClient.PostAsJsonAsync("api/failedCounter/GetFailedCount" , accountId).Result;
+
+                failedCountResponse.EnsureSuccessStatusCode();
+
+                var failedCount = failedCountResponse.Content.ReadAsAsync<int>().Result;
+                var logger      = NLog.LogManager.GetCurrentClassLogger();
+                logger.Info($"accountId:{accountId} failed times:{failedCount}");
 
                 string message     = $"account:{accountId} try to login failed";
                 var    slackClient = new SlackClient("my api token");
