@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net.Http;
 
 namespace DependencyInjectionWorkshop.Models
 {
@@ -23,15 +22,15 @@ namespace DependencyInjectionWorkshop.Models
             this.logger        = logger;
         }
 
-        public AuthenticationService()
-        {
-            profile       = new ProfileDao();
-            hash          = new Sha256Adapter();
-            otp           = new OtpProxy();
-            notification  = new SlackAdapter();
-            failedCounter = new FailedCounter();
-            logger        = new NLogAdapter();
-        }
+        // public AuthenticationService()
+        // {
+        //     profile       = new ProfileDao();
+        //     hash          = new Sha256Adapter();
+        //     otp           = new OtpProxy();
+        //     notification  = new SlackAdapter();
+        //     failedCounter = new FailedCounter();
+        //     logger        = new NLogAdapter();
+        // }
 
         /// <summary>
         ///
@@ -50,7 +49,7 @@ namespace DependencyInjectionWorkshop.Models
 
             var passwordFromDb = profile.GetPasswordFromDb(accountId);
             var hashedPassword = hash.Compute(inputPassword);
-            var currentOtp     = otp.GetCurrentOtp(inputOtp);
+            var currentOtp     = otp.GetCurrentOtp(accountId);
             if (passwordFromDb == hashedPassword && inputOtp == currentOtp)
             {
                 failedCounter.Reset(accountId);
