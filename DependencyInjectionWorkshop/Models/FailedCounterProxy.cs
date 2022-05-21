@@ -15,23 +15,23 @@ namespace DependencyInjectionWorkshop.Models
             return isAccountLocked;
         }
 
-        public void AddFailCount(string accountId , HttpClient httpClient)
+        public void AddFailCount(string accountId)
         {
-            var addFailedCountResponse = httpClient.PostAsJsonAsync("api/failedCounter/Add" , accountId).Result;
+            var addFailedCountResponse = new HttpClient() { BaseAddress = new Uri("http://joey.com/") }.PostAsJsonAsync("api/failedCounter/Add" , accountId).Result;
             addFailedCountResponse.EnsureSuccessStatusCode();
         }
 
-        public void ResetFailCount(string accountId , HttpClient httpClient)
+        public void ResetFailCount(string accountId)
         {
             // 證成功，重設失敗次數
-            var resetResponse = httpClient.PostAsJsonAsync("api/failedCounter/Reset" , accountId).Result;
+            var resetResponse = new HttpClient() { BaseAddress = new Uri("http://joey.com/") }.PostAsJsonAsync("api/failedCounter/Reset" , accountId).Result;
             resetResponse.EnsureSuccessStatusCode();
         }
 
-        public int GetFailedCount(string accountId , HttpClient httpClient)
+        public int GetFailedCount(string accountId)
         {
             var failedCountResponse =
-                httpClient.PostAsJsonAsync("api/failedCounter/GetFailedCount" , accountId).Result;
+                new HttpClient() { BaseAddress = new Uri("http://joey.com/") }.PostAsJsonAsync("api/failedCounter/GetFailedCount" , accountId).Result;
 
             failedCountResponse.EnsureSuccessStatusCode();
 

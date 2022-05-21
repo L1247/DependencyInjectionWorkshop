@@ -7,9 +7,9 @@ namespace DependencyInjectionWorkshop.Models
     {
         public OtpProxy() { }
 
-        public string GetCurrentOtp(string inputOtp , HttpClient httpClient)
+        public string GetCurrentOtp(string inputOtp)
         {
-            var response = httpClient.PostAsJsonAsync("api/otps" , inputOtp).GetAwaiter().GetResult();
+            var response = new HttpClient() { BaseAddress = new Uri("http://joey.com/") }.PostAsJsonAsync("api/otps" , inputOtp).GetAwaiter().GetResult();
             if (response.IsSuccessStatusCode) { }
             else throw new Exception($"web api error, accountId:{inputOtp}");
 

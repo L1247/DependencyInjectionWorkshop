@@ -39,17 +39,17 @@ namespace DependencyInjectionWorkshop.Models
 
             var passwordFromDb = profileDao.GetPasswordFromDb(accountId);
             var hashedPassword = sha256Adapter.GetHashedPassword(inputPassword);
-            var currentOtp     = otpProxy.GetCurrentOtp(inputOtp , new HttpClient() { BaseAddress = new Uri("http://joey.com/") });
+            var currentOtp     = otpProxy.GetCurrentOtp(inputOtp);
             if (passwordFromDb == hashedPassword && inputOtp == currentOtp)
             {
-                failedCounterProxy.ResetFailCount(accountId , new HttpClient() { BaseAddress = new Uri("http://joey.com/") });
+                failedCounterProxy.ResetFailCount(accountId);
                 return true;
             }
             else
             {
                 // 驗證失敗，累計失敗次數
-                failedCounterProxy.AddFailCount(accountId , new HttpClient() { BaseAddress = new Uri("http://joey.com/") });
-                var failedCount = failedCounterProxy.GetFailedCount(accountId , new HttpClient() { BaseAddress = new Uri("http://joey.com/") });
+                failedCounterProxy.AddFailCount(accountId);
+                var failedCount = failedCounterProxy.GetFailedCount(accountId);
                 nLogAdapter.LogInfo($"accountId:{accountId} failed times:{failedCount}");
                 slackAdapter.NotifyUser(accountId);
                 return false;
