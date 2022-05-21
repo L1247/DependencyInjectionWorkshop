@@ -1,66 +1,9 @@
 ﻿using System;
-using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
-using Dapper;
 using SlackAPI;
 
 namespace DependencyInjectionWorkshop.Models
 {
-    public class ProfileDao
-    {
-        public string GetPasswordFromDb(string accountId)
-        {
-            string passwordFromDb;
-            using (var connection = new SqlConnection("my connection string"))
-            {
-                var password1 = connection.Query<string>("spGetUserPassword" , new { Id = accountId } ,
-                    commandType : CommandType.StoredProcedure).SingleOrDefault();
-
-                passwordFromDb = password1;
-            }
-
-            return passwordFromDb;
-        }
-    }
-
-    public class Sha256Adapter
-    {
-        public Sha256Adapter() { }
-
-        public string GetHashedPassword(string inputPassword)
-        {
-            var crypt  = new System.Security.Cryptography.SHA256Managed();
-            var hash   = new StringBuilder();
-            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(inputPassword));
-            foreach (var theByte in crypto)
-            {
-                hash.Append(theByte.ToString("x2"));
-            }
-
-            var hashedPassword = hash.ToString();
-            return hashedPassword;
-        }
-    }
-
-    public class OtpProxy
-    {
-        public OtpProxy() { }
-
-        public string GetCurrentOtp(string inputOtp , HttpClient httpClient)
-        {
-            var response = httpClient.PostAsJsonAsync("api/otps" , inputOtp).GetAwaiter().GetResult();
-            if (response.IsSuccessStatusCode) { }
-            else throw new Exception($"web api error, accountId:{inputOtp}");
-
-            // compare hashed password and otp
-            var currentOtp = response.Content.ReadAsAsync<string>().GetAwaiter().GetResult();
-            return currentOtp;
-        }
-    }
-
     public class AuthenticationService
     {
         private readonly ProfileDao    profileDao;
