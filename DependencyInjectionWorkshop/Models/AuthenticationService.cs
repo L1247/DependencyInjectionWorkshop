@@ -52,7 +52,7 @@ namespace DependencyInjectionWorkshop.Models
                 // 驗證失敗，累計失敗次數
                 failedCounterProxy.AddFailCount(accountId , httpClient);
                 var failedCount = failedCounterProxy.GetFailedCount(accountId , httpClient);
-                nLogAdapter.LogFailedCount(accountId , failedCount);
+                nLogAdapter.LogInfo($"accountId:{accountId} failed times:{failedCount}");
                 slackAdapter.NotifyUser(accountId);
                 return false;
             }
