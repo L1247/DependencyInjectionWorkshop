@@ -10,6 +10,7 @@ namespace DependencyInjectionWorkshop.Models
         private readonly OtpProxy           otpProxy;
         private readonly SlackAdapter       slackAdapter;
         private readonly FailedCounterProxy failedCounterProxy;
+        private readonly NLogAdapter        nLogAdapter;
 
         public AuthenticationService()
         {
@@ -18,6 +19,7 @@ namespace DependencyInjectionWorkshop.Models
             otpProxy           = new OtpProxy();
             slackAdapter       = new SlackAdapter();
             failedCounterProxy = new FailedCounterProxy();
+            nLogAdapter        = new NLogAdapter();
         }
 
         /// <summary>
@@ -50,16 +52,10 @@ namespace DependencyInjectionWorkshop.Models
                 // 驗證失敗，累計失敗次數
                 failedCounterProxy.AddFailCount(accountId , httpClient);
                 var failedCount = failedCounterProxy.GetFailedCount(accountId , httpClient);
-                LogFailedCount(accountId , failedCount);
+                nLogAdapter.LogFailedCount(accountId , failedCount);
                 slackAdapter.NotifyUser(accountId);
                 return false;
             }
-        }
-
-        private void LogFailedCount(string accountId , int failedCount)
-        {
-            var logger = NLog.LogManager.GetCurrentClassLogger();
-            logger.Info($"accountId:{accountId} failed times:{failedCount}");
         }
     }
 
