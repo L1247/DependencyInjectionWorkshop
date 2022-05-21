@@ -7,11 +7,11 @@ namespace DependencyInjectionWorkshop.Models
     {
         public OtpProxy() { }
 
-        public string GetCurrentOtp(string inputOtp)
+        public string GetCurrentOtp(string accountId)
         {
-            var response = new HttpClient() { BaseAddress = new Uri("http://joey.com/") }.PostAsJsonAsync("api/otps" , inputOtp).GetAwaiter().GetResult();
+            var response = new HttpClient() { BaseAddress = new Uri("http://joey.com/") }.PostAsJsonAsync("api/otps" , accountId).GetAwaiter().GetResult();
             if (response.IsSuccessStatusCode) { }
-            else throw new Exception($"web api error, accountId:{inputOtp}");
+            else throw new Exception($"web api error, accountId:{accountId}");
 
             // compare hashed password and otp
             var currentOtp = response.Content.ReadAsAsync<string>().GetAwaiter().GetResult();

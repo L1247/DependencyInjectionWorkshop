@@ -44,15 +44,44 @@ namespace DependencyInjectionWorkshopTests
         [Test]
         public void Valid()
         {
-            failedCounter.IsAccountLocked("star").Returns(false);
-            profile.GetPasswordFromDb("star").Returns("hashed pw");
-            hash.Compute("123").Returns("hashed pw");
-            otp.GetCurrentOtp("star").Returns("000000");
+            WhenValid();
+            ShouldValid();
 
+            // failedCounter.Received(1).Reset("star");
+        }
+
+        private void WhenValid()
+        {
+            GivenIsAccountLocked("star" , false);
+            GivenPasswordFromDb("star" , "hashed pw");
+            GivenHashedPassword("123" , "hashed pw");
+            GivenCurrentOtp("star" , "000000");
+        }
+
+        private void ShouldValid()
+        {
             var isValid = authenticationService.Verify("star" , "123" , "000000");
             Assert.AreEqual(true , isValid);
+        }
 
-            failedCounter.Received(1).Reset("star");
+        private void GivenCurrentOtp(string accountId , string currentOtp)
+        {
+            otp.GetCurrentOtp(accountId).Returns(currentOtp);
+        }
+
+        private void GivenHashedPassword(string inputPassword , string hashedResult)
+        {
+            hash.Compute(inputPassword).Returns(hashedResult);
+        }
+
+        private void GivenPasswordFromDb(string accountId , string password)
+        {
+            profile.GetPasswordFromDb(accountId).Returns(password);
+        }
+
+        private void GivenIsAccountLocked(string accountId , bool isLocked)
+        {
+            failedCounter.IsAccountLocked(accountId).Returns(isLocked);
         }
 
     #endregion
