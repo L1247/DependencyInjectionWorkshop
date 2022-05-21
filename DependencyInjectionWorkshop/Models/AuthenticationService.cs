@@ -26,13 +26,34 @@ namespace DependencyInjectionWorkshop.Models
         }
     }
 
+    public class Sha256Adapter
+    {
+        public Sha256Adapter() { }
+
+        public string GetHashedPassword(string inputPassword)
+        {
+            var crypt  = new System.Security.Cryptography.SHA256Managed();
+            var hash   = new StringBuilder();
+            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(inputPassword));
+            foreach (var theByte in crypto)
+            {
+                hash.Append(theByte.ToString("x2"));
+            }
+
+            var hashedPassword = hash.ToString();
+            return hashedPassword;
+        }
+    }
+
     public class AuthenticationService
     {
-        private ProfileDao profileDao;
+        private readonly ProfileDao    profileDao;
+        private readonly Sha256Adapter sha256Adapter;
 
         public AuthenticationService()
         {
-            profileDao = new ProfileDao();
+            profileDao    = new ProfileDao();
+            sha256Adapter = new Sha256Adapter();
         }
 
         /// <summary>
@@ -53,7 +74,7 @@ namespace DependencyInjectionWorkshop.Models
             }
 
             var passwordFromDb = profileDao.GetPasswordFromDb(accountId);
-            var hashedPassword = GetHashedPassword(inputPassword);
+            var hashedPassword = sha256Adapter.GetHashedPassword(inputPassword);
             var currentOtp     = GetCurrentOtp(inputOtp , httpClient);
             if (passwordFromDb == hashedPassword && inputOtp == currentOtp)
             {
@@ -114,20 +135,6 @@ namespace DependencyInjectionWorkshop.Models
             // 證成功，重設失敗次數
             var resetResponse = httpClient.PostAsJsonAsync("api/failedCounter/Reset" , accountId).Result;
             resetResponse.EnsureSuccessStatusCode();
-        }
-
-        private static string GetHashedPassword(string inputPassword)
-        {
-            var crypt  = new System.Security.Cryptography.SHA256Managed();
-            var hash   = new StringBuilder();
-            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(inputPassword));
-            foreach (var theByte in crypto)
-            {
-                hash.Append(theByte.ToString("x2"));
-            }
-
-            var hashedPassword = hash.ToString();
-            return hashedPassword;
         }
 
         private static string GetCurrentOtp(string inputOtp , HttpClient httpClient)
