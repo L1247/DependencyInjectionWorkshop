@@ -3,9 +3,9 @@ using System.Net.Http;
 
 namespace DependencyInjectionWorkshop.Models
 {
-    public class FailedCounterProxy
+    public class FailedCounter : IFailedCounter
     {
-        public FailedCounterProxy() { }
+        public FailedCounter() { }
 
         public bool IsAccountLocked(string accountId)
         {

@@ -5,21 +5,21 @@ namespace DependencyInjectionWorkshop.Models
 {
     public class AuthenticationService
     {
-        private readonly ProfileDao         profileDao;
-        private readonly Sha256Adapter      sha256Adapter;
-        private readonly OtpProxy           otpProxy;
-        private readonly SlackAdapter       slackAdapter;
-        private readonly FailedCounterProxy failedCounterProxy;
-        private readonly NLogAdapter        nLogAdapter;
+        private readonly IProfile       profile;
+        private readonly IHash          hash;
+        private readonly IOtp           otp;
+        private readonly INotification  notification;
+        private readonly IFailedCounter failedCounter;
+        private readonly ILogger        logger;
 
         public AuthenticationService()
         {
-            profileDao         = new ProfileDao();
-            sha256Adapter      = new Sha256Adapter();
-            otpProxy           = new OtpProxy();
-            slackAdapter       = new SlackAdapter();
-            failedCounterProxy = new FailedCounterProxy();
-            nLogAdapter        = new NLogAdapter();
+            profile       = new ProfileDao();
+            hash          = new Sha256Adapter();
+            otp           = new OtpProxy();
+            notification  = new SlackAdapter();
+            failedCounter = new FailedCounter();
+            logger        = new NLogAdapter();
         }
 
         /// <summary>
@@ -31,27 +31,27 @@ namespace DependencyInjectionWorkshop.Models
         /// <returns>IsValid</returns>
         public bool Verify(string accountId , string inputPassword , string inputOtp)
         {
-            var isAccountLocked = failedCounterProxy.IsAccountLocked(accountId);
+            var isAccountLocked = failedCounter.IsAccountLocked(accountId);
             if (isAccountLocked)
             {
                 throw new FailedTooManyTimesException() { AccountId = accountId };
             }
 
-            var passwordFromDb = profileDao.GetPasswordFromDb(accountId);
-            var hashedPassword = sha256Adapter.Compute(inputPassword);
-            var currentOtp     = otpProxy.GetCurrentOtp(inputOtp);
+            var passwordFromDb = profile.GetPasswordFromDb(accountId);
+            var hashedPassword = hash.Compute(inputPassword);
+            var currentOtp     = otp.GetCurrentOtp(inputOtp);
             if (passwordFromDb == hashedPassword && inputOtp == currentOtp)
             {
-                failedCounterProxy.Reset(accountId);
+                failedCounter.Reset(accountId);
                 return true;
             }
             else
             {
                 // 驗證失敗，累計失敗次數
-                failedCounterProxy.Add(accountId);
-                var failedCount = failedCounterProxy.Get(accountId);
-                nLogAdapter.LogInfo($"accountId:{accountId} failed times:{failedCount}");
-                slackAdapter.NotifyUser(accountId);
+                failedCounter.Add(accountId);
+                var failedCount = failedCounter.Get(accountId);
+                logger.LogInfo($"accountId:{accountId} failed times:{failedCount}");
+                notification.NotifyUser(accountId);
                 return false;
             }
         }
