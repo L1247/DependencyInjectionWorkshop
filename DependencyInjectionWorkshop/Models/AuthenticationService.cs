@@ -49,7 +49,7 @@ namespace DependencyInjectionWorkshop.Models
             {
                 // 驗證失敗，累計失敗次數
                 failedCounterProxy.AddFailCount(accountId , httpClient);
-                var failedCount = GetFailedCount(accountId , httpClient);
+                var failedCount = failedCounterProxy.GetFailedCount(accountId , httpClient);
                 LogFailedCount(accountId , failedCount);
                 slackAdapter.NotifyUser(accountId);
                 return false;
@@ -60,17 +60,6 @@ namespace DependencyInjectionWorkshop.Models
         {
             var logger = NLog.LogManager.GetCurrentClassLogger();
             logger.Info($"accountId:{accountId} failed times:{failedCount}");
-        }
-
-        private int GetFailedCount(string accountId , HttpClient httpClient)
-        {
-            var failedCountResponse =
-                httpClient.PostAsJsonAsync("api/failedCounter/GetFailedCount" , accountId).Result;
-
-            failedCountResponse.EnsureSuccessStatusCode();
-
-            var failedCount = failedCountResponse.Content.ReadAsAsync<int>().Result;
-            return failedCount;
         }
     }
 
