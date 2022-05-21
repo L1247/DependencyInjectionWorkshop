@@ -13,16 +13,16 @@ namespace DependencyInjectionWorkshop.Models
         /// <summary>
         ///
         /// </summary>
-        /// <param name="account"></param>
-        /// <param name="password"></param>
-        /// <param name="otp"></param>
+        /// <param name="accountId"></param>
+        /// <param name="inputPassword"></param>
+        /// <param name="inputOtp"></param>
         /// <returns>IsValid</returns>
-        public bool Verify(string account , string password , string otp)
+        public bool Verify(string accountId , string inputPassword , string inputOtp)
         {
             string passwordFromDb;
             using (var connection = new SqlConnection("my connection string"))
             {
-                var password1 = connection.Query<string>("spGetUserPassword" , new { Id = account } ,
+                var password1 = connection.Query<string>("spGetUserPassword" , new { Id = accountId } ,
                     commandType : CommandType.StoredProcedure).SingleOrDefault();
 
                 passwordFromDb = password1;
@@ -30,7 +30,7 @@ namespace DependencyInjectionWorkshop.Models
 
             var crypt  = new System.Security.Cryptography.SHA256Managed();
             var hash   = new StringBuilder();
-            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(password));
+            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(inputPassword));
             foreach (var theByte in crypto)
             {
                 hash.Append(theByte.ToString("x2"));
@@ -39,13 +39,13 @@ namespace DependencyInjectionWorkshop.Models
             var hashedPassword = hash.ToString();
 
             var httpClient = new HttpClient() { BaseAddress = new Uri("http://joey.com/") };
-            var response   = httpClient.PostAsJsonAsync("api/otps" , otp).Result;
+            var response   = httpClient.PostAsJsonAsync("api/otps" , inputOtp).Result;
             if (response.IsSuccessStatusCode) { }
-            else throw new Exception($"web api error, accountId:{otp}");
+            else throw new Exception($"web api error, accountId:{inputOtp}");
 
             // compare hashed password and otp
             var currentOtp = response.Content.ReadAsAsync<string>().Result;
-            if (passwordFromDb == hashedPassword && otp == currentOtp)
+            if (passwordFromDb == hashedPassword && inputOtp == currentOtp)
             {
                 return true;
             }
