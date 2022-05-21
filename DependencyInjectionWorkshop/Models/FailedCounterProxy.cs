@@ -15,20 +15,20 @@ namespace DependencyInjectionWorkshop.Models
             return isAccountLocked;
         }
 
-        public void AddFailCount(string accountId)
+        public void Add(string accountId)
         {
             var addFailedCountResponse = new HttpClient() { BaseAddress = new Uri("http://joey.com/") }.PostAsJsonAsync("api/failedCounter/Add" , accountId).Result;
             addFailedCountResponse.EnsureSuccessStatusCode();
         }
 
-        public void ResetFailCount(string accountId)
+        public void Reset(string accountId)
         {
             // 證成功，重設失敗次數
             var resetResponse = new HttpClient() { BaseAddress = new Uri("http://joey.com/") }.PostAsJsonAsync("api/failedCounter/Reset" , accountId).Result;
             resetResponse.EnsureSuccessStatusCode();
         }
 
-        public int GetFailedCount(string accountId)
+        public int Get(string accountId)
         {
             var failedCountResponse =
                 new HttpClient() { BaseAddress = new Uri("http://joey.com/") }.PostAsJsonAsync("api/failedCounter/GetFailedCount" , accountId).Result;
