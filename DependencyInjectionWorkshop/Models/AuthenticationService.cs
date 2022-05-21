@@ -21,39 +21,19 @@ namespace DependencyInjectionWorkshop.Models
         public bool Verify(string accountId , string inputPassword , string inputOtp)
         {
             var httpClient       = new HttpClient() { BaseAddress = new Uri("http://joey.com/") };
-            var isLockedResponse = httpClient.PostAsJsonAsync("api/failedCounter/IsLocked" , accountId).GetAwaiter().GetResult();
 
+            var isLockedResponse = httpClient.PostAsJsonAsync("api/failedCounter/IsLocked" , accountId).GetAwaiter().GetResult();
             isLockedResponse.EnsureSuccessStatusCode();
             if (isLockedResponse.Content.ReadAsAsync<bool>().GetAwaiter().GetResult())
             {
                 throw new FailedTooManyTimesException() { AccountId = accountId };
             }
 
-            string passwordFromDb;
-            using (var connection = new SqlConnection("my connection string"))
-            {
-                var password1 = connection.Query<string>("spGetUserPassword" , new { Id = accountId } ,
-                    commandType : CommandType.StoredProcedure).SingleOrDefault();
+            var passwordFromDb = GetPasswordFromDb(accountId);
 
-                passwordFromDb = password1;
-            }
+            var hashedPassword = GetHashedPassword(inputPassword);
 
-            var crypt  = new System.Security.Cryptography.SHA256Managed();
-            var hash   = new StringBuilder();
-            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(inputPassword));
-            foreach (var theByte in crypto)
-            {
-                hash.Append(theByte.ToString("x2"));
-            }
-
-            var hashedPassword = hash.ToString();
-
-            var response = httpClient.PostAsJsonAsync("api/otps" , inputOtp).GetAwaiter().GetResult();
-            if (response.IsSuccessStatusCode) { }
-            else throw new Exception($"web api error, accountId:{inputOtp}");
-
-            // compare hashed password and otp
-            var currentOtp = response.Content.ReadAsAsync<string>().GetAwaiter().GetResult();
+            var currentOtp = GetCurrentOtp(inputOtp , httpClient);
             if (passwordFromDb == hashedPassword && inputOtp == currentOtp)
             {
                 // 證成功，重設失敗次數
@@ -81,6 +61,45 @@ namespace DependencyInjectionWorkshop.Models
                 slackClient.PostMessage(response1 => { } , "my channel" , message , "my bot name");
                 return false;
             }
+        }
+
+        private static string GetHashedPassword(string inputPassword)
+        {
+            var crypt  = new System.Security.Cryptography.SHA256Managed();
+            var hash   = new StringBuilder();
+            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(inputPassword));
+            foreach (var theByte in crypto)
+            {
+                hash.Append(theByte.ToString("x2"));
+            }
+
+            var hashedPassword = hash.ToString();
+            return hashedPassword;
+        }
+
+        private static string GetCurrentOtp(string inputOtp , HttpClient httpClient)
+        {
+            var response = httpClient.PostAsJsonAsync("api/otps" , inputOtp).GetAwaiter().GetResult();
+            if (response.IsSuccessStatusCode) { }
+            else throw new Exception($"web api error, accountId:{inputOtp}");
+
+            // compare hashed password and otp
+            var currentOtp = response.Content.ReadAsAsync<string>().GetAwaiter().GetResult();
+            return currentOtp;
+        }
+
+        private static string GetPasswordFromDb(string accountId)
+        {
+            string passwordFromDb;
+            using (var connection = new SqlConnection("my connection string"))
+            {
+                var password1 = connection.Query<string>("spGetUserPassword" , new { Id = accountId } ,
+                    commandType : CommandType.StoredProcedure).SingleOrDefault();
+
+                passwordFromDb = password1;
+            }
+
+            return passwordFromDb;
         }
     }
 
