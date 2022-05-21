@@ -12,6 +12,17 @@ namespace DependencyInjectionWorkshop.Models
         private readonly IFailedCounter failedCounter;
         private readonly ILogger        logger;
 
+        public AuthenticationService(IProfile       profile ,       IHash   hash , IOtp otp , INotification notification ,
+                                     IFailedCounter failedCounter , ILogger logger)
+        {
+            this.profile       = profile;
+            this.hash          = hash;
+            this.otp           = otp;
+            this.notification  = notification;
+            this.failedCounter = failedCounter;
+            this.logger        = logger;
+        }
+
         public AuthenticationService()
         {
             profile       = new ProfileDao();
