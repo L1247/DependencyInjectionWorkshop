@@ -9,8 +9,32 @@ using SlackAPI;
 
 namespace DependencyInjectionWorkshop.Models
 {
+    public class ProfileDao
+    {
+        public string GetPasswordFromDb(string accountId)
+        {
+            string passwordFromDb;
+            using (var connection = new SqlConnection("my connection string"))
+            {
+                var password1 = connection.Query<string>("spGetUserPassword" , new { Id = accountId } ,
+                    commandType : CommandType.StoredProcedure).SingleOrDefault();
+
+                passwordFromDb = password1;
+            }
+
+            return passwordFromDb;
+        }
+    }
+
     public class AuthenticationService
     {
+        private ProfileDao profileDao;
+
+        public AuthenticationService()
+        {
+            profileDao = new ProfileDao();
+        }
+
         /// <summary>
         ///
         /// </summary>
@@ -28,9 +52,9 @@ namespace DependencyInjectionWorkshop.Models
                 throw new FailedTooManyTimesException() { AccountId = accountId };
             }
 
-            var passwordFromDb = GetPasswordFromDb(accountId);
+            var passwordFromDb = profileDao.GetPasswordFromDb(accountId);
             var hashedPassword = GetHashedPassword(inputPassword);
-            var currentOtp = GetCurrentOtp(inputOtp , httpClient);
+            var currentOtp     = GetCurrentOtp(inputOtp , httpClient);
             if (passwordFromDb == hashedPassword && inputOtp == currentOtp)
             {
                 ResetFailCount(accountId , httpClient);
@@ -115,20 +139,6 @@ namespace DependencyInjectionWorkshop.Models
             // compare hashed password and otp
             var currentOtp = response.Content.ReadAsAsync<string>().GetAwaiter().GetResult();
             return currentOtp;
-        }
-
-        private static string GetPasswordFromDb(string accountId)
-        {
-            string passwordFromDb;
-            using (var connection = new SqlConnection("my connection string"))
-            {
-                var password1 = connection.Query<string>("spGetUserPassword" , new { Id = accountId } ,
-                    commandType : CommandType.StoredProcedure).SingleOrDefault();
-
-                passwordFromDb = password1;
-            }
-
-            return passwordFromDb;
         }
     }
 
