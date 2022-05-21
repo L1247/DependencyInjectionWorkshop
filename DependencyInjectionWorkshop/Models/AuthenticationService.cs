@@ -45,15 +45,33 @@ namespace DependencyInjectionWorkshop.Models
         }
     }
 
+    public class OtpProxy
+    {
+        public OtpProxy() { }
+
+        public string GetCurrentOtp(string inputOtp , HttpClient httpClient)
+        {
+            var response = httpClient.PostAsJsonAsync("api/otps" , inputOtp).GetAwaiter().GetResult();
+            if (response.IsSuccessStatusCode) { }
+            else throw new Exception($"web api error, accountId:{inputOtp}");
+
+            // compare hashed password and otp
+            var currentOtp = response.Content.ReadAsAsync<string>().GetAwaiter().GetResult();
+            return currentOtp;
+        }
+    }
+
     public class AuthenticationService
     {
         private readonly ProfileDao    profileDao;
         private readonly Sha256Adapter sha256Adapter;
+        private readonly OtpProxy      otpProxy;
 
         public AuthenticationService()
         {
             profileDao    = new ProfileDao();
             sha256Adapter = new Sha256Adapter();
+            otpProxy      = new OtpProxy();
         }
 
         /// <summary>
@@ -75,7 +93,7 @@ namespace DependencyInjectionWorkshop.Models
 
             var passwordFromDb = profileDao.GetPasswordFromDb(accountId);
             var hashedPassword = sha256Adapter.GetHashedPassword(inputPassword);
-            var currentOtp     = GetCurrentOtp(inputOtp , httpClient);
+            var currentOtp     = otpProxy.GetCurrentOtp(inputOtp , httpClient);
             if (passwordFromDb == hashedPassword && inputOtp == currentOtp)
             {
                 ResetFailCount(accountId , httpClient);
@@ -135,17 +153,6 @@ namespace DependencyInjectionWorkshop.Models
             // 證成功，重設失敗次數
             var resetResponse = httpClient.PostAsJsonAsync("api/failedCounter/Reset" , accountId).Result;
             resetResponse.EnsureSuccessStatusCode();
-        }
-
-        private static string GetCurrentOtp(string inputOtp , HttpClient httpClient)
-        {
-            var response = httpClient.PostAsJsonAsync("api/otps" , inputOtp).GetAwaiter().GetResult();
-            if (response.IsSuccessStatusCode) { }
-            else throw new Exception($"web api error, accountId:{inputOtp}");
-
-            // compare hashed password and otp
-            var currentOtp = response.Content.ReadAsAsync<string>().GetAwaiter().GetResult();
-            return currentOtp;
         }
     }
 
